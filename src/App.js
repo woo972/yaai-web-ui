@@ -1,25 +1,37 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
+import axios from 'axios';
+import ChatInput from './components/ChatInput';
+import ChatWindow from './components/ChatWindow';
 import './App.css';
 
-function App() {
+const App = () => {
+  const [messages, setMessages] = useState([]);
+
+  const handleSend = async (message) => {
+    const userMessage = { sender: 'User', text: message };
+    setMessages([...messages, userMessage]);
+
+    try {
+      const response = await axios.get('http://localhost:8080/api/v1/chat/simple', {
+        params: { message }
+      });
+      const aiMessage = { sender: 'AI', text: response.data.generation };
+      setMessages((prevMessages) => [...prevMessages, aiMessage]);
+    } catch (error) {
+      console.error('Error fetching response:', error);
+      const errorMessage = { sender: 'AI', text: 'Error: Unable to fetch response' };
+      setMessages((prevMessages) => [...prevMessages, errorMessage]);
+    }
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app-container">
+      <div className="chat-container">
+        <ChatWindow messages={messages} />
+        <ChatInput onSend={handleSend} />
+      </div>
     </div>
   );
-}
+};
 
 export default App;
